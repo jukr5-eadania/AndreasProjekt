@@ -21,12 +21,18 @@ namespace AndreasProjekt
         private Rectangle progressBarBackground;
         private Rectangle progressBarFill;
 
-        private float boredom = 0.2f;
+        private Texture2D penis;
+        private Texture2D hand;
+        private Texture2D cum;
+
+        private float boredom = 0.5f;
         private float boredomTimer;
 
-        private int bustMax = 2;
+        private int bustMax = 100;
         private int jerkCounter = 0;
         private bool pressed;
+
+        private float timer;
 
         private int selectedMainMenuItem = 0;
         private string[] mainMenuItems = { "Start Game"};
@@ -55,6 +61,10 @@ namespace AndreasProjekt
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            penis = Content.Load<Texture2D>("penis");
+            hand = Content.Load<Texture2D>("hand");
+            cum = Content.Load<Texture2D>("cum");
+
             progressBarTexture = new Texture2D(GraphicsDevice, 1, 1);
             progressBarTexture.SetData(new[] { Color.White });
 
@@ -66,7 +76,6 @@ namespace AndreasProjekt
             progressBarBackground = new Rectangle(progressBarX, progressBarY, progressBarWidth, progressBarHeight);
 
             UIFont = Content.Load<SpriteFont>("UIFont");
-
         }
 
         protected override void Update(GameTime gameTime)
@@ -83,6 +92,7 @@ namespace AndreasProjekt
                     break;
 
                 case GameState.Playing:
+                    timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
                     HandleInput();
                     Boredom();
                     Win();
@@ -108,19 +118,34 @@ namespace AndreasProjekt
                     break;
 
                 case GameState.Playing:
+                    _spriteBatch.Draw(penis, new Vector2((GameWorld.Width - penis.Width) / 2,(GameWorld.Height - penis.Width) / 2), Color.White);
+                    if (pressed)
+                    {
+                        _spriteBatch.Draw(hand, new Vector2((GameWorld.Width - hand.Width) / 2, ((GameWorld.Height - hand.Width) / 2) + 10), Color.White);
+                    }
+                    else
+                    {
+                        _spriteBatch.Draw(hand, new Vector2((GameWorld.Width - hand.Width) / 2, (GameWorld.Height - hand.Width) / 2), Color.White);
+                    }
                     _spriteBatch.Draw(progressBarTexture, progressBarBackground, Color.Gray);
 
                     int fillWidth = (int)(progressBarBackground.Width * ((float)jerkCounter / bustMax));
                     progressBarFill = new Rectangle(progressBarBackground.X, progressBarBackground.Y, fillWidth, progressBarBackground.Height);
                     _spriteBatch.Draw(progressBarTexture, progressBarFill, Color.White);
-
-                    _spriteBatch.DrawString(UIFont, "Jerks: " + jerkCounter, new Vector2(0, 0), Color.White);
+                    _spriteBatch.DrawString(UIFont, "Time: " + GetFormattedTime(timer), new Vector2(0, 0), Color.White);
+#if DEBUG
+                    _spriteBatch.DrawString(UIFont, "Jerks: " + jerkCounter, new Vector2(0, 20), Color.White);
+#endif
                     break;
 
                 case GameState.Win:
                     string message = "You Win";
                     Vector2 textSize = UIFont.MeasureString(message);
-                    _spriteBatch.DrawString(UIFont, "You Win", new Vector2((GameWorld.Width - textSize.X) / 2, (GameWorld.Height - textSize.Y) / 2), Color.White);
+                    _spriteBatch.DrawString(UIFont, "You Win", new Vector2((GameWorld.Width - textSize.X) / 2, 20), Color.White);
+                    _spriteBatch.DrawString(UIFont, "Time: " + GetFormattedTime(timer), new Vector2((GameWorld.Width - textSize.X) / 2, 40), Color.White);
+                    _spriteBatch.Draw(penis, new Vector2((GameWorld.Width - penis.Width) / 2, (GameWorld.Height - penis.Width) / 2), Color.White);
+                    _spriteBatch.Draw(hand, new Vector2((GameWorld.Width - hand.Width) / 2, ((GameWorld.Height - hand.Width) / 2) + 10), Color.White);
+                    _spriteBatch.Draw(cum, new Vector2((GameWorld.Width - cum.Width) / 2, (GameWorld.Height - cum.Width) / 2), Color.White);
                     break;
             }
 
@@ -192,6 +217,14 @@ namespace AndreasProjekt
             {
                 SetGameState(GameState.Playing);
             }
+        }
+
+        private string GetFormattedTime(float totalSeconds)
+        {
+            int minutes = (int)totalSeconds / 60;
+            int seconds = (int)totalSeconds % 60;
+            int milliseconds = (int)((totalSeconds - (int)totalSeconds) * 1000);
+            return $"{minutes:D2}:{seconds:D2}:{milliseconds:D3}"; // MM:SS:MS
         }
     }
 }

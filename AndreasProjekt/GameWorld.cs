@@ -4,6 +4,13 @@ using Microsoft.Xna.Framework.Input;
 
 namespace AndreasProjekt
 {
+    public enum GameState
+    {
+        MainMenu,
+        Playing,
+        Win
+    }
+
     public class GameWorld : Game
     {
         private GraphicsDeviceManager _graphics;
@@ -17,11 +24,17 @@ namespace AndreasProjekt
         private float boredom = 0.2f;
         private float boredomTimer;
 
-        private int bustMax = 10;
+        private int bustMax = 2;
         private int jerkCounter = 0;
+        private bool pressed;
+
+        private int selectedMainMenuItem = 0;
+        private string[] mainMenuItems = { "Start Game"};
+
+        private GameState _gameState = GameState.MainMenu;
+
         public static int Height { get; set; }
         public static int Width { get; set; }
-        private bool pressed;
 
         public GameWorld()
         {
@@ -63,12 +76,20 @@ namespace AndreasProjekt
 
             boredomTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            HandleInput();
-            Boredom();
-
-            if (jerkCounter >= bustMax)
+            switch (_gameState)
             {
-                Exit();
+                case GameState.MainMenu:
+                    UpdateMainMenu();
+                    break;
+
+                case GameState.Playing:
+                    HandleInput();
+                    Boredom();
+                    Win();
+                    break;
+
+                case GameState.Win:
+                    break;
             }
 
             base.Update(gameTime);
@@ -80,13 +101,28 @@ namespace AndreasProjekt
 
             _spriteBatch.Begin();
 
-            _spriteBatch.Draw(progressBarTexture, progressBarBackground, Color.Gray);
+            switch (_gameState)
+            {
+                case GameState.MainMenu:
+                    DrawMainMenu();
+                    break;
 
-            int fillWidth = (int)(progressBarBackground.Width * ((float)jerkCounter / bustMax));
-            progressBarFill = new Rectangle(progressBarBackground.X, progressBarBackground.Y, fillWidth, progressBarBackground.Height);
-            _spriteBatch.Draw(progressBarTexture, progressBarFill, Color.White);
+                case GameState.Playing:
+                    _spriteBatch.Draw(progressBarTexture, progressBarBackground, Color.Gray);
 
-            _spriteBatch.DrawString(UIFont, "Jerks: " + jerkCounter, new Vector2(0, 0), Color.White);
+                    int fillWidth = (int)(progressBarBackground.Width * ((float)jerkCounter / bustMax));
+                    progressBarFill = new Rectangle(progressBarBackground.X, progressBarBackground.Y, fillWidth, progressBarBackground.Height);
+                    _spriteBatch.Draw(progressBarTexture, progressBarFill, Color.White);
+
+                    _spriteBatch.DrawString(UIFont, "Jerks: " + jerkCounter, new Vector2(0, 0), Color.White);
+                    break;
+
+                case GameState.Win:
+                    string message = "You Win";
+                    Vector2 textSize = UIFont.MeasureString(message);
+                    _spriteBatch.DrawString(UIFont, "You Win", new Vector2((GameWorld.Width - textSize.X) / 2, (GameWorld.Height - textSize.Y) / 2), Color.White);
+                    break;
+            }
 
             _spriteBatch.End();
 
@@ -120,6 +156,41 @@ namespace AndreasProjekt
             {
                 jerkCounter--;
                 boredomTimer = 0;
+            }
+        }
+
+        private void Win()
+        {
+            if (jerkCounter >= bustMax)
+            {
+                SetGameState(GameState.Win);
+            }
+        }
+
+        public void SetGameState(GameState gameState)
+        {
+            if (gameState != _gameState)
+            {
+                _gameState = gameState;
+            }
+        }
+
+        private void DrawMainMenu()
+        {
+            for (int i = 0; i < mainMenuItems.Length; i++)
+            {
+                Color itemColor = i == selectedMainMenuItem ? Color.HotPink : Color.White;
+                _spriteBatch.DrawString(UIFont, mainMenuItems[i], new Vector2(GameWorld.Width / 2 - UIFont.MeasureString(mainMenuItems[i]).X / 2, 150 + i * 40), itemColor);
+            }
+        }
+
+        private void UpdateMainMenu()
+        {
+            KeyboardState keyboardState = Keyboard.GetState();
+
+            if (keyboardState.IsKeyDown(Keys.Space))
+            {
+                SetGameState(GameState.Playing);
             }
         }
     }

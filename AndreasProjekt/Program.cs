@@ -1,3 +1,3 @@
 ﻿
-using var game = new AndreasProjekt.Game1();
+using var game = new AndreasProjekt.GameWorld();
 game.Run();
